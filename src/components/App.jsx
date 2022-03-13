@@ -35,7 +35,7 @@ export class App extends React.Component {
   }
 
   handlerSubmit = (e) =>{
-    e.preventDefault();
+    // e.preventDefault();
     const {pending, success, errors} = this.apiState;
     pending()
     try{
