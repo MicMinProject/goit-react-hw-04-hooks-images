@@ -45,7 +45,9 @@ export class App extends React.Component {
         success()})
       .catch(error => {
         errors();
-      }
+      })
+  }
+  
 
 
   handlerChange = (e) =>{
