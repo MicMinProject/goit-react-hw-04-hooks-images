@@ -1,4 +1,5 @@
 import React from 'react';
+import ErrorBoundary from './ErrorBoundary';
 import Searchbar from './Searchbar.jsx';
 import ImageGallery from './ImageGallery.jsx';
 import ImageGalleryItem from './ImageGalleryItem.jsx';
@@ -38,17 +39,14 @@ export class App extends React.Component {
     e.preventDefault();
     const {pending, success, errors} = this.apiState;
     pending()
-    try{
-      axios.get(`https://pixabay.com/api/?q=${this.state.value}&page=${this.state.page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=${perPage}`)
+    axios.get(`https://pixabay.com/api/?q=${this.state.value}&page=${this.state.page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=${perPage}`)
       .then(response => {this.setState({data: response.data.hits,
         totalHits: response.data.totalHits});
         success()})
+      .catch(error => {
+        errors();
       }
-      catch (error) {
-        console.log(error);
-        errors()
-      }
-  }
+
 
   handlerChange = (e) =>{
     e.preventDefault();
@@ -59,15 +57,11 @@ export class App extends React.Component {
     const {loadPending, loadSuccess, loadError} = this.apiState;
     loadPending();
     await this.setState({page: this.state.page +1})
-    try{
-      axios.get(`https://pixabay.com/api/?q=${this.state.value}&page=${this.state.page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=${perPage}`)
+    axios.get(`https://pixabay.com/api/?q=${this.state.value}&page=${this.state.page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=${perPage}`)
       .then(response => {this.setState({data: [...this.state.data, ...response.data.hits]});
-       loadSuccess();})
-      }
-      catch (error){
-        console.log(error);
-        loadError()
-      }
+        loadSuccess();})
+      .catch(error => {
+        loadError()})
   }
 
   handlerImage = (e) =>{
@@ -93,12 +87,14 @@ export class App extends React.Component {
         color: '#010101',
       }}
     >
-      <Searchbar onSubmit={this.handlerSubmit} value={this.state.value} onChange={this.handlerChange}/>
-      {this.state.image !== '' ? (<Modal image={this.state.image} onClick={this.handlerEscape} onKeyPress={this.handlerEscape}/>) : ''}
-      <ImageGallery data={this.state.data} currentState={this.state.current} currentLoadState={this.state.currentLoad}>
-        <ImageGalleryItem data={this.state.data} currentState={this.state.current} onClick={this.handlerImage}/>
-      </ImageGallery>
-      {this.state.totalHits > this.state.page*perPage ? <Button data={this.state.data} onClick={this.handlerClick}/> : ""}
+      <ErrorBoundary>
+        <Searchbar onSubmit={this.handlerSubmit} value={this.state.value} onChange={this.handlerChange}/>
+        {this.state.image !== '' ? (<Modal image={this.state.image} onClick={this.handlerEscape} onKeyPress={this.handlerEscape}/>) : ''}
+        <ImageGallery data={this.state.data} currentState={this.state.current} currentLoadState={this.state.currentLoad}>
+          <ImageGalleryItem data={this.state.data} currentState={this.state.current} onClick={this.handlerImage}/>
+        </ImageGallery>
+        {this.state.totalHits > this.state.page*perPage ? <Button data={this.state.data} onClick={this.handlerClick}/> : ""}
+      </ErrorBoundary>
     </div>
     )
   };

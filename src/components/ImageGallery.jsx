@@ -6,6 +6,16 @@ import { jsx } from '@emotion/react';
 const ImageGallery = ({data, currentState, currentLoadState, children}) =>{
   return(
     <>
+      {currentState === 'error' && 
+      (<h3
+        css={{
+          width: '70%',
+          display: 'flex',
+          marginTop: '150px',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+        >The server is not responding &#128533; try later...</h3>)}
       {currentState === 'pending' && (<Loader />)}
       {data.length === 0 && currentState !== 'pending' ? 
         (<p 
