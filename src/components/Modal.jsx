@@ -48,9 +48,9 @@ class Modal extends React.Component {
     ) : null
   
     return(
-      <div>
+      <>
         {modal}
-      </div>
+      </>
     )
   }
 }
