@@ -1,8 +1,15 @@
-import React from 'react';
+import React, {useRef, useEffect} from 'react';
 /** @jsxImportSource @emotion/react */
 import { jsx } from '@emotion/react';
 
 const Searchbar = ({onSubmit, value, onChange})=>{
+
+  const searchbarFocusRef = useRef();
+
+  useEffect(() => {
+    searchbarFocusRef.current.focus()
+  },[])
+  
   return(
     <header 
       css={{
@@ -73,6 +80,7 @@ const Searchbar = ({onSubmit, value, onChange})=>{
               fontSize: '18px',
             }
           }}
+          ref={searchbarFocusRef}
           type="text"
           name='search'
           value={value}

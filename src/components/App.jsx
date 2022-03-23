@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import ErrorBoundary from './ErrorBoundary';
 import Searchbar from './Searchbar.jsx';
 import ImageGallery from './ImageGallery.jsx';
@@ -7,76 +7,74 @@ import Button from './Button.jsx';
 import Modal from './Modal.jsx';
 /** @jsxImportSource @emotion/react */
 import { jsx } from '@emotion/react';
-// import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
 import axios from 'axios';
 
 const API_KEY = '25107796-9974ea960b32f02e8ca5a894d';
 const perPage = 12;
 
-export class App extends React.Component {
-  
-  state={
-    value: '',
-    page: 1,
-    data: [null],
-    current: 'idle',
-    currentLoad: 'idle',
-    image: '',
+function App() {
+
+  const [value, setValue] = useState('');
+  const [page, setPage] = useState(1);
+  const [data, setData] = useState([null]);
+  const [current, setCurrent] = useState('idle');
+  const [currentLoad, setCurrentLoad] = useState('idle');
+  const [image, setImage] = useState('');
+  const [totalHits, setTotalHits] = useState('');
+
+  const apiState = {
+    idle: () => setCurrent('idle'),
+    pending: () => setCurrent('pending'),
+    success: () => setCurrent('success'),
+    errors: () => setCurrent('error'),
+    loadIdle: () => setCurrentLoad('idle'),
+    loadPending: () => setCurrentLoad('pending'),
+    loadSuccess: () => setCurrentLoad('success'),
+    loadError: () => setCurrentLoad('error'),
   }
 
-  apiState = {
-    idle: () => {this.setState({current: 'idle'})},
-    pending: () => {this.setState({current: 'pending'})},
-    success: () => {this.setState({current: 'success'})},
-    errors: () => {this.setState({current: 'error'})},
-    loadIdle: () => {this.setState({currentLoad: 'idle'})},
-    loadPending: () => {this.setState({currentLoad: 'pending'})},
-    loadSuccess: () => {this.setState({currentLoad: 'success'})},
-    loadError: () => {this.setState({currentLoad: 'error'})},
-  }
-
-  handlerSubmit = (e) =>{
+  const handlerSubmit = (e) =>{
     e.preventDefault();
-    const {pending, success, errors} = this.apiState;
-    pending()
-    axios.get(`https://pixabay.com/api/?q=${this.state.value}&page=${this.state.page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=${perPage}`)
-      .then(response => {this.setState({data: response.data.hits,
-        totalHits: response.data.totalHits});
+    const {pending, success, errors} = apiState;
+    pending();
+    axios.get(`https://pixabay.com/api/?q=${value}&page=${page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=${perPage}`)
+      .then(response => {setData(response.data.hits);
+        setTotalHits(response.data.totalHits);
         success()})
       .catch(error => {
         errors();
-      })
+      });
+  }
+
+  const handlerChange = (e) =>{
+    e.preventDefault();
+    setValue(e.target.value);
   }
   
-
-
-  handlerChange = (e) =>{
-    e.preventDefault();
-    this.setState((state) => ({value: e.target.value}))
+  const handlerImage = (e) =>{
+    const item = data.find(record => record.id === Number(e.target.id));
+    setImage(item.largeImageURL)
+  }
+  
+  const handlerEscape = (e) =>{
+    setImage('')
   }
 
-  handlerClick = async (e) =>{
-    const {loadPending, loadSuccess, loadError} = this.apiState;
+  const handlerClick =  (e) =>{
+    const {loadPending} = apiState;
     loadPending();
-    await this.setState({page: this.state.page +1})
-    axios.get(`https://pixabay.com/api/?q=${this.state.value}&page=${this.state.page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=${perPage}`)
-      .then(response => {this.setState({data: [...this.state.data, ...response.data.hits]});
+    setPage(page + 1);
+  }
+  
+  useEffect(() => {
+    const {loadSuccess, loadError} = apiState;
+    axios.get(`https://pixabay.com/api/?q=${value}&page=${page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=${perPage}`)
+      .then(response => {setData([...data, ...response.data.hits]);
         loadSuccess();})
       .catch(error => {
-        loadError()})
-  }
+        loadError()});
+  },[page])
 
-  handlerImage = (e) =>{
-    const item = this.state.data.find(record => record.id === Number(e.target.id))
-    this.setState({image: item.largeImageURL})
-    
-  }
-
-  handlerEscape = (e) =>{
-    this.setState({image: ''})
-  }
-
-  render() {
     return(
     <div
       css={{
@@ -90,14 +88,16 @@ export class App extends React.Component {
       }}
     >
       <ErrorBoundary>
-        <Searchbar onSubmit={this.handlerSubmit} value={this.state.value} onChange={this.handlerChange}/>
-        {this.state.image !== '' ? (<Modal image={this.state.image} onClick={this.handlerEscape} onKeyPress={this.handlerEscape}/>) : ''}
-        <ImageGallery data={this.state.data} currentState={this.state.current} currentLoadState={this.state.currentLoad}>
-          <ImageGalleryItem data={this.state.data} currentState={this.state.current} onClick={this.handlerImage}/>
+        <Searchbar onSubmit={handlerSubmit} value={value} onChange={handlerChange}/>
+        <Modal image={image} onClick={handlerEscape} onKeyPress={handlerEscape}/>
+        <ImageGallery data={data} currentState={current} currentLoadState={currentLoad}>
+          <ImageGalleryItem data={data} currentState={current} onClick={handlerImage}/>
         </ImageGallery>
-        {this.state.totalHits > this.state.page*perPage ? <Button data={this.state.data} onClick={this.handlerClick}/> : ""}
+        {totalHits > page*perPage ? <Button data={data} onClick={handlerClick}/> : ""}
       </ErrorBoundary>
     </div>
     )
-  };
+  
 };
+
+export {App};
