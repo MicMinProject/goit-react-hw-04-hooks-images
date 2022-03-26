@@ -47,7 +47,6 @@ function App() {
   }
 
   const handlerChange = (e) =>{
-    e.preventDefault();
     setValue(e.target.value);
   }
   
